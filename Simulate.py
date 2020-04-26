@@ -31,7 +31,7 @@ class Simulate():
 					if r<self.p_recovery(self.day,self.grid.current_types_pop,grid.state):
 						grid.convert_type(i,j,'Immune')
 
-				elif cur_type=='Immune':
+				elif cur_type=='Immune' or cur_type=='Vaccinated':
 					r=random.random()
 					if r<self.p_unimmunisation(self.day,self.grid.current_types_pop,grid.state):
 						grid.convert_type(i,j,'Susceptible')
@@ -69,14 +69,14 @@ class Simulate():
 
 def main():
 	#Standard spread
-	def p_infection(day,cur_type_pop,state):
+	def p_infection(day,cur_type_pop,state):  # probability of infectiong neighbour
 		return 0.3
-	def p_recovery(day,cur_type_pop,state):
+	def p_recovery(day,cur_type_pop,state):   #probability of recovering from infection
 		return 0.2
-	def p_unimmunisation(day,cur_type_pop,state):
+	def p_unimmunisation(day,cur_type_pop,state):  #probability of going from immune to susceptible.
 		return 0
-	individual_types=['Susceptible','Infected','Immune']
-	color_list=['white', 'black','red']
+	individual_types=['Susceptible','Infected','Immune','Vaccinated']
+	color_list=['white', 'black','red','blue']
 	gridtable =np.zeros((12,12))
 	gridtable[5][6]=1
 	gridtable[2][3]=1
@@ -93,10 +93,9 @@ def main():
 	#sim_obj.grid.animate(False,color_list,0.1)
 	#sim_obj.grid.plot_time_series()
 
-for i in range(100):
- main()  
+ 
 
-
+main()
 
 
 

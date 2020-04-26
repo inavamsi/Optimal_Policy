@@ -4,21 +4,47 @@ import numpy as np
 import random
 import copy
 
+class Agent():
+  def __init__(self,individual_type,type_number):
+    self.individual_type=individual_type
+    self.type_number=type_number
+    self.quarantined=False
+    self.incubating=False
+    self.neighbours= []
+
+  def set_neighbours(self,neighbours):
+    self.neighbours=neighbours
+
+
 class Grid():
   def __init__(self, grid, individual_types):
     self.grid_size=len(grid)
     self.initialise(individual_types)
     self.grid=grid
     self.update_timeseries()
-    self.state='Normal'
+    self.global_state='Normal'
+    self.init_agent_grid()
 
-  '''def __init__(self, grid_size, individual_types, initial_types_pop):
-    self.grid_size=grid_size                    #Scalar denoting length and breadth of grid
-    self.initialise(individual_types)
-    self.randomly_intialize_grid(initial_types_pop)
-    self.update_timeseries()
-    self.state='Normal'
-    '''
+  #def __init__(self, grid_size, individual_types, initial_types_pop):
+  # self.grid_size=grid_size                    #Scalar denoting length and breadth of grid
+  # self.initialise(individual_types)
+  # self.randomly_intialize_grid(initial_types_pop)
+  # self.update_timeseries()
+  # self.state='Normal'
+    
+
+  def init_agent_grid(self):
+    self.agent_grid=[]
+    for i in range(self.grid_size):
+      self.agent_grid.append([])
+      for j in range(self.grid_size):
+        individual_type=self.number_to_type[self.grid[i][j]]
+        agent=Agent(individual_type,self.grid[i][j])
+        self.agent_grid[i].append(agent)
+
+    for i in range(self.grid_size):
+      for j in range(self.grid_size):
+        self.agent_grid[i][j].set_neighbours(self.nbr_agents(i,j))
 
   def initialise(self,individual_types):
     self.individual_types=individual_types      #List of Individual types
@@ -76,6 +102,8 @@ class Grid():
     old_type=self.number_to_type[self.grid[i][j]]
     self.grid[i][j]=self.type_to_number[new_type]
 
+    self.agent_grid[i][j].individual_type=new_type
+
     self.current_types_pop[old_type]-=1
     self.current_types_pop[new_type]+=1
 
@@ -99,6 +127,20 @@ class Grid():
       neighbour_type_list[(int)(nbr_no)]+=1
 
     return neighbour_type_list
+
+  def nbr_agents(self,i,j):
+    nbr_agents=[]
+
+    if i>0:
+      nbr_agents.append(self.agent_grid[i-1][j])
+    if j>0:
+      nbr_agents.append(self.agent_grid[i][j-1])
+    if i<self.grid_size-1:
+      nbr_agents.append(self.agent_grid[i+1][j])
+    if j<self.grid_size-1:
+      nbr_agents.append(self.agent_grid[i][j+1])
+
+    return nbr_agents
 
   def plot_time_series(self):
     for t in self.individual_types:
@@ -153,8 +195,6 @@ class Grid():
     plt.pause(5)
     for g in self.store:
       plt.close()
-
-
 
 
 

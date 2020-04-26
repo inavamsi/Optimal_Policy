@@ -125,8 +125,8 @@ def scenario3():
 		return 0.2
 	def p_unimmunisation(day,cur_type_pop,state):
 		return 0
-	individual_types=['Susceptible','Infected','Immune']
-	color_list=['white', 'black','red']
+	individual_types=['Susceptible','Infected','Immune','Vaccinated']
+	color_list=['white', 'black','red','blue']
 	gridtable =np.zeros((12,12))
 	gridtable[1][1]=1
 	gridtable[5][1]=1
@@ -144,7 +144,7 @@ def scenario3():
 	def reward_fn(days,no_infected):
 		return -days
 
-	mc_obj=MCTS(sim_obj,100,reward_fn)
+	mc_obj=MCTS(sim_obj,200,reward_fn)
 	mc_obj.run_game(color_list)
 scenario3()  
 
