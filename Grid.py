@@ -5,15 +5,21 @@ import random
 import copy
 
 class Agent():
-  def __init__(self,individual_type,type_number):
+  def __init__(self,individual_type,type_number,coordinates):
     self.individual_type=individual_type
     self.type_number=type_number
-    self.quarantined=False
-    self.incubating=False
+    self.policy_state={}
+    self.policy_state['quarantined']=False
+    self.policy_state['socially distanced']=False
     self.neighbours= []
+    self.coordinates=coordinates
 
   def set_neighbours(self,neighbours):
     self.neighbours=neighbours
+
+  def day(self):
+    #When called simulates a day for agent.
+    return None
 
 
 class Grid():
@@ -22,7 +28,6 @@ class Grid():
     self.initialise(individual_types)
     self.grid=grid
     self.update_timeseries()
-    self.global_state='Normal'
     self.init_agent_grid()
 
   #def __init__(self, grid_size, individual_types, initial_types_pop):
@@ -39,7 +44,7 @@ class Grid():
       self.agent_grid.append([])
       for j in range(self.grid_size):
         individual_type=self.number_to_type[self.grid[i][j]]
-        agent=Agent(individual_type,self.grid[i][j])
+        agent=Agent(individual_type,self.grid[i][j],(i,j))
         self.agent_grid[i].append(agent)
 
     for i in range(self.grid_size):
@@ -193,6 +198,7 @@ class Grid():
       plt.pause(time)
 
     plt.pause(5)
+    inp=input()
     for g in self.store:
       plt.close()
 
