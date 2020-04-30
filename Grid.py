@@ -198,7 +198,6 @@ class Grid():
       plt.pause(time)
 
     plt.pause(5)
-    inp=input()
     for g in self.store:
       plt.close()
 
