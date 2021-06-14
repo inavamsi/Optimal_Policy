@@ -4,6 +4,7 @@ import numpy as np
 import random
 import copy
 
+
 class Agent():
   def __init__(self,individual_type,type_number,coordinates):
     self.individual_type=individual_type
