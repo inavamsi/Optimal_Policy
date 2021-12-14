@@ -43,7 +43,7 @@ class Simulate():
 
 				conversion_type=self.find_conversion_type(cur_agent)
 				new_grid[i][j]=grid.type_to_number[conversion_type]
-				
+
 		for i in range(grid.grid_size):
 			for j in range(grid.grid_size):
 				cur_type=grid.number_to_type[new_grid[i][j]]
@@ -53,7 +53,7 @@ class Simulate():
 		grid.update_timeseries()
 		if 'Infected' in self.individual_types:
 			self.total_infected_days+=self.grid.current_types_pop['Infected']
-		return 
+		return
 
 	def find_conversion_type(self,agent):
 		my_type=agent.individual_type
@@ -82,7 +82,7 @@ class Simulate():
 
 		return reward_fn(self.day,total_infected_days)
 
-def main():
+if __name__ == "__main__":
 	#Standard spread
 	def p_infection(day,global_state,my_agent,neighbour_agents):  # probability of infectiong neighbour
 		p_inf=0.5
@@ -126,7 +126,7 @@ def main():
 	grid=Grid.Grid(gridtable,individual_types)
 	policy=Policy.Vaccinate_block(grid, individual_types,1,0)
 	sim_obj= Simulate(transmission_prob,individual_types,grid,policy)
-	
+
 	def reward_fn(days,no_infected):
 		return -days
 
@@ -137,10 +137,3 @@ def main():
 	#sim_obj.simulate_till_end(reward_fn)
 	sim_obj.grid.animate(False,color_list,0.3)
 	sim_obj.grid.plot_time_series()
-
-
-
-main()
-
-
-

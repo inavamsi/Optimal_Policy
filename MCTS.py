@@ -17,7 +17,7 @@ class MCTS():
 	def get_score_of_action(self,state_obj,action):
 		total_score=0
 		for i in range(self.number_of_runs):
-			
+
 			#gridtable=copy.deepcopy(state_obj.grid.grid)
 			#grid=Grid.Grid(gridtable,state_obj.individual_types)
 			#policy=Policy.Vaccinate_block(grid, state_obj.individual_types,state_obj.policy.block_size,state_obj.policy.cost,copy.deepcopy(state_obj.policy.valid_actions))
@@ -33,12 +33,12 @@ class MCTS():
 		max_score=-np.inf
 		max_action=-1
 		for action in state_obj.policy.valid_actions:
-			
+
 			action_score=self.get_score_of_action(state_obj,action)
 			if action_score>max_score:
 				max_score=action_score
 				max_action=action
-			
+
 		return max_action
 
 	def run_game(self,color_list):
@@ -112,14 +112,14 @@ def scenario():
 	policy=Policy.Vaccinate_block(grid, individual_types,3,0)
 	#policy=Policy.Quarantine_area(grid, individual_types, 2, 0)
 	sim_obj= Simulate.Simulate(transmission_prob,individual_types,grid,policy)
-	
+
 	def reward_fn(days,no_infected):
 		return -days
 
 	mc_obj=MCTS(sim_obj,300,reward_fn)
 	mc_obj.run_game(color_list)
 
-#scenario()  
+scenario()
 
 
 def scenario2():
@@ -174,22 +174,11 @@ def scenario2():
 	policy=Policy.Vaccinate_block(grid, individual_types,3,0)
 	#policy=Policy.Quarantine_area(grid, individual_types, 2, 0)
 	sim_obj= Simulate.Simulate(transmission_prob,individual_types,grid,policy)
-	
+
 	def reward_fn(days,no_infected):
 		return -days
 
 	mc_obj=MCTS(sim_obj,100,reward_fn)
 	mc_obj.run_game(color_list)
 
-scenario2()
-
-
-
-
-
-
-
-
-
-
-
+# scenario2()

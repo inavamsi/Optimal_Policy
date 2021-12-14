@@ -18,7 +18,7 @@ class Quarantine_area(Policy):
 			print("Error: Not a valid bound for quarantine distance!")
 			return None
 		self.max_quarantine_distance=max_quarantine_distance
-		self.number_of_actions = max_quarantine_distance+2 
+		self.number_of_actions = max_quarantine_distance+2
 		self.cost=cost
 		self.policy_name="Quarantine"
 
@@ -69,7 +69,7 @@ class Vaccinate_block(Policy):
 			print("Error: Not a valid block size!")
 			return None
 		self.block_size=block_size
-		self.number_of_actions = (int)(grid.grid_size/block_size)**2 
+		self.number_of_actions = (int)(grid.grid_size/block_size)**2
 		self.cost=cost
 		self.policy_name="Vaccinate"
 
@@ -81,7 +81,7 @@ class Vaccinate_block(Policy):
 		else: self.valid_actions=valid_actions
 
 	def do_action(self,grid,action_no):
-		if action_no==-1 or action_no==self.number_of_actions:
+		if action_no==-1 or action_no==self.number_of_actions or action_no not in self.valid_actions:
 			#Null policy where nothing happens
 			return 0
 
