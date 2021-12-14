@@ -259,7 +259,7 @@ class game_env():
     return [grid.grid]
 
   def step(self,action):
-    print("Action :", action)
+    # print("Action :", action)
     self.sim_obj.simulate_day(action)
     next_state=copy.deepcopy(self.sim_obj.grid.grid)
     done=False
