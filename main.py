@@ -30,10 +30,11 @@ if __name__ == "__main__":
 
 	# Other Defaults
 	individual_types=['Susceptible','Infected','Immune','Vaccinated']
+	initial_types_pop = {'Susceptible':0.98, 'Infected':0.02, 'Immune':0.0, 'Vaccinated':0.0}
 	color_list=['black','red','white','blue']
 
 	# RL Environment and Agent
-	env = game_env(args.grid_size, individual_types, color_list, args.vax_size)
+	env = game_env(args.grid_size, individual_types, initial_types_pop, color_list, args.vax_size)
 	agent = get_agent(env, args)
 
 	# RL run
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 	eps_history = []
 
 	for episode in range(args.max_epd):
-		state = env.reset(args.grid_size)
+		state = env.reset()
 		episode_reward = 0
 		done = False
 		step = 0
