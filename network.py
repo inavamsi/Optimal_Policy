@@ -6,7 +6,7 @@ import numpy as np
 class ConvDQN(nn.Module):
 
 	def __init__(self, input_dim, output_dim):
-		super(ConvDQN, self).__init__()
+		super().__init__()
 		self.input_dim = input_dim
 		self.output_dim = output_dim
 
@@ -48,7 +48,7 @@ class ConvDQN(nn.Module):
 class LinearDQN(nn.Module):
 
 	def __init__(self, input_dim, output_dim):
-		super(LinearDQN, self).__init__()
+		super().__init__()
 		self.input_dim = input_dim
 		self.output_dim = output_dim
 
