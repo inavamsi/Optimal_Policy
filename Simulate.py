@@ -1,11 +1,5 @@
-import matplotlib.pyplot as plt
-from matplotlib import colors
-import numpy as np
 import random
 import copy
-import Grid
-import Policy
-import time
 
 class Simulate():
 	def __init__(self, transmission_prob, individual_types,grid,policy):
@@ -16,21 +10,6 @@ class Simulate():
 		self.policy=policy
 		self.total_infected_days=0
 		self.global_state='Normal'
-
-	def copy_cstr(self):
-		gridtable=copy.deepcopy(self.grid.grid)
-		grid=Grid.Grid(gridtable,self.individual_types)
-		if self.policy.policy_name=="Vaccinate":
-			policy=Policy.Vaccinate_block(grid, self.individual_types,self.policy.block_size,self.policy.cost,copy.deepcopy(self.policy.valid_actions))
-		if self.policy.policy_name=="Quarantine":
-			policy=Policy.Vaccinate_block(grid, self.individual_types,self.policy.max_quarantine_distance,self.policy.cost,copy.deepcopy(self.policy.valid_actions))
-		temp_obj= Simulate(self.transmission_prob,self.individual_types,grid,policy)
-
-		for i in range(grid.grid_size):
-			for j in range(grid.grid_size):
-				temp_obj.grid.agent_grid[i][j].policy_state=copy.deepcopy(self.grid.agent_grid[i][j].policy_state)
-
-		return temp_obj
 
 	def simulate_day(self,action_no):
 		self.policy.do_action(self.grid,action_no)
@@ -83,6 +62,15 @@ class Simulate():
 		return reward_fn(self.day,total_infected_days)
 
 if __name__ == "__main__":
+	"""
+	Runs a demo of the disease spread without any ongoing intervention policy
+	"""
+
+	import numpy as np
+	from Environment import Grid
+	import Policy
+	from Utils import plot_time_series, animate
+
 	#Standard spread
 	def p_infection(day,global_state,my_agent,neighbour_agents):  # probability of infectiong neighbour
 		p_inf=0.5
@@ -123,7 +111,7 @@ if __name__ == "__main__":
 	gridtable[22][43]=1
 	gridtable[7][2]=1
 	gridtable[15][2]=1
-	grid=Grid.Grid(gridtable,individual_types)
+	grid=Grid(gridtable,individual_types)
 	policy=Policy.Vaccinate_block(grid, individual_types,1,0)
 	sim_obj= Simulate(transmission_prob,individual_types,grid,policy)
 
@@ -135,5 +123,5 @@ if __name__ == "__main__":
 	#sim_obj.simulate_day(7)
 
 	#sim_obj.simulate_till_end(reward_fn)
-	sim_obj.grid.animate(False,color_list,0.3)
-	sim_obj.grid.plot_time_series()
+	animate(grid,True,color_list,0.3)
+	plot_time_series(grid)
