@@ -284,4 +284,4 @@ def get_agent(env, args):
 		return DuelingDoubleDQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps)
 
 	else:
-		raise "Enter Valid Network! Choose from : LinearDQN, SimpleConvDQN, ConvDQN, DoubleDQN, DuelingDQN, DuelingDoubleDQN"
+		raise Exception("Enter Valid Network! Choose from : LinearDQN, SimpleConvDQN, ConvDQN, DoubleDQN, DuelingDQN, DuelingDoubleDQN")
