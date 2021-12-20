@@ -35,6 +35,7 @@ class Simple_Agent(Agent):
 	"""
 	def __init__(self, env, network, learning_rate, gamma, buffer_size, eps_max, eps_min, eps_dec):
 		super(Simple_Agent, self).__init__(env, network, learning_rate, gamma, buffer_size, eps_max, eps_min, eps_dec)
+		
 		if self.network == "SimpleConvDQN":
 			self.model = ConvDQN(env.env_shape, env.no_of_actions)
 		elif self.network == "LinearDQN":
