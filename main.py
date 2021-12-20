@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 from environment import game_env
 from agent import get_agent
-from utils import plot_learning_curve
+from utils import plot_learning_curve, plot_grid
 
 def parse_args():
 	arg_parser = argparse.ArgumentParser()
@@ -20,12 +20,15 @@ def parse_args():
 	arg_parser.add_argument("-emn", "--eps_min", dest="eps_min", type=float, default=0.01, help="Minimum Epsilon. Default = 0.01")
 	arg_parser.add_argument("-ed", "--eps_dec", dest="eps_dec", type=float, default=0.0001, help="Epsilon Decrement. Default = 0.0001")
 	arg_parser.add_argument("-us", "--update_steps", dest="update_steps", type=int, default=200, help="Target Network update steps for ConvDQN. Default = 200")
+	arg_parser.add_argument("-l", "--load_checkpoint", dest = "load_checkpoint", action='store_true', default = False, help='load model checkpoint')
+	arg_parser.add_argument("-p", "--path", type=str, dest = "path", default='models/', help='path for model saving/loading')
+	arg_parser.add_argument("-pl", "--plot", dest = "plot", action='store_false', default = True, help='Disable plot')
 	args = arg_parser.parse_args()
 	return args
 
 def other_defaults():
 	individual_types=['Susceptible','Infected','Immune','Vaccinated']
-	initial_types_pop = {'Susceptible':0.98, 'Infected':0.02, 'Immune':0.0, 'Vaccinated':0.0}
+	initial_types_pop = {'Susceptible':0.97, 'Infected':0.03, 'Immune':0.0, 'Vaccinated':0.0}
 	color_list=['black','red','white','blue']
 
 	def p_standard(p):
@@ -60,17 +63,23 @@ if __name__ == "__main__":
 
 	# Parse Arguments
 	args = parse_args()
+	name = f"{args.network}_{args.grid_size}_{args.max_epd}"
 
 	# Other Defaults
 	individual_types, initial_types_pop, transmission_prob, color_list = other_defaults()
 
 	# RL Environment and Agent
 	env = game_env(args.grid_size, individual_types, initial_types_pop, transmission_prob, color_list, args.vax_size)
-	agent = get_agent(env, args)
+	agent = get_agent(env, args, name)
+
+	if args.load_checkpoint:
+		agent.load_models()
 
 	# RL run
 	episode_rewards = []
 	eps_history = []
+	best_score = -np.inf
+	n_steps = 0
 
 	for episode in range(args.max_epd):
 		state = env.reset()
@@ -81,23 +90,31 @@ if __name__ == "__main__":
 		while not done:
 			action = agent.get_action(state)
 			next_state, reward, done, _ = env.step(action)
-			agent.learn(state, action, reward, next_state, done, args.batch_size)
+			if not args.load_checkpoint:
+				agent.learn(state, action, reward, next_state, done, args.batch_size)
+			else:
+				plot_grid(env.sim_obj.grid, True, color_list)
 			episode_reward += reward
 			state = next_state
+			n_steps+=1
 
 		episode_rewards.append(episode_reward)
 		eps_history.append(agent.eps)
 
-		if (episode+1) % 100 == 0:
+		if episode >= 99:
 			avg_score = np.mean(episode_rewards[-100:])
-			print("Episode " + str(episode+1) + ": " + str(avg_score))
+
+			if avg_score > best_score:
+				if not args.load_checkpoint:
+					agent.save_models()
+				best_score = avg_score
+
+			if (episode+1) % 100 == 0:
+				print("Episode " + str(episode+1) + " Average Score : " + str(avg_score) + ", Best Score : " + str(best_score))
+
+		if args.load_checkpoint and n_steps>30:
+			break
 
 	# Plots
-	inp = 1
-	while inp == 1:
+	if args.plot and not args.load_checkpoint:
 		plot_learning_curve(episode_rewards, eps_history)
-		env.env_plot()
-		try:
-			inp = int(input("Rerun plots? (1 for Yes) : "))
-		except:
-			break
