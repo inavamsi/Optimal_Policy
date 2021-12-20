@@ -6,7 +6,7 @@ Learn the optimal public policy to end the epidemic using Reinforcement Learning
 1. Vaccination Block Policy
 2. Quarantine Block Policy
 
-### Current variants are :
+### Current Networks used :
 
 The RL Agent uses variants of the Deep Q Learning Networks (DQN).
 
