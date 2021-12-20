@@ -1,7 +1,6 @@
 import numpy as np
 import torch as T
 import torch.nn as nn
-import torch.autograd as autograd
 from utils import ReplayBuffer
 from network import ConvDQN, LinearDQN, DuelingDQN
 
