@@ -67,5 +67,4 @@ optional arguments:
                         Epsilon Decrement. Default = 0.0001
 
   -us UPDATE_STEPS, --update_steps UPDATE_STEPS
-                        Target Network update steps for ConvDQN. Default = 200
-                        
+                        Target Network update steps for ConvDQN and other variants. Default = 200
