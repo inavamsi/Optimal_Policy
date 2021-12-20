@@ -6,11 +6,10 @@ from utils import ReplayBuffer
 from network import ConvDQN, LinearDQN
 
 class Agent():
-	def __init__(self, env, network, learning_rate, gamma, buffer_size, eps_max, eps_min, eps_dec):
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec):
 		self.env = env
 		self.learning_rate = learning_rate
 		self.gamma = gamma
-		self.replay_buffer = ReplayBuffer(max_size=buffer_size, input_shape = env.env_shape)
 		self.eps=eps_max
 		self.eps_min=eps_min
 		self.eps_dec=eps_dec
@@ -29,18 +28,22 @@ class Agent():
 	def dec_eps(self):
 		self.eps = max(self.eps_min, self.eps-self.eps_dec)
 
+	def learn(self, *args, **kwargs):
+		raise NotImplementedError
+
 class Simple_Agent(Agent):
 	"""
 	This agent can handle the networks ConvDQN and LinearDQN. This agent uses a single DQN and a replay buffer for learning.
 	"""
-	def __init__(self, env, network, learning_rate, gamma, buffer_size, eps_max, eps_min, eps_dec):
-		super(Simple_Agent, self).__init__(env, network, learning_rate, gamma, buffer_size, eps_max, eps_min, eps_dec)
-		
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size):
+		super(Simple_Agent, self).__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec)
+
 		if self.network == "SimpleConvDQN":
 			self.model = ConvDQN(env.env_shape, env.no_of_actions)
 		elif self.network == "LinearDQN":
 			self.model = LinearDQN(env.env_shape, env.no_of_actions)
 
+		self.replay_buffer = ReplayBuffer(max_size=buffer_size, input_shape = env.env_shape)
 
 	def update(self, batch_size):
 		self.model.optimizer.zero_grad()
@@ -65,3 +68,15 @@ class Simple_Agent(Agent):
 		self.model.optimizer.step()
 
 		self.dec_eps()
+
+	def learn(self,state, action, reward, next_state, done, batch_size):
+		self.replay_buffer.store_transition(state, action, reward, next_state, done)
+
+		if len(self.replay_buffer) > batch_size:
+			self.update(batch_size)
+
+
+
+def get_agent(env, args):
+	if args.network in ["LinearDQN", "SimpleConvDQN"]:
+		return Simple_Agent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size)

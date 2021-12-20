@@ -1,9 +1,8 @@
 import numpy as np
 import argparse
 from environment import game_env
-from agent import Simple_Agent
+from agent import get_agent
 from utils import plot_learning_curve
-
 
 def parse_args():
 	arg_parser = argparse.ArgumentParser()
@@ -23,13 +22,6 @@ def parse_args():
 	args = arg_parser.parse_args()
 	return args
 
-
-def get_agent(network):
-	if network in ["LinearDQN", "SimpleConvDQN"]:
-		return Simple_Agent
-
-
-
 if __name__ == "__main__":
 
 	# Parse Arguments
@@ -41,7 +33,7 @@ if __name__ == "__main__":
 
 	# RL Environment and Agent
 	env = game_env(args.grid_size, individual_types, color_list, args.vax_size)
-	agent = get_agent(args.network)(env, args.network, args.learning_rate, args.gamma, args.max_buffer_size, args.eps_max, args.eps_min, args.eps_dec)
+	agent = get_agent(env, args)
 
 	# RL run
 	episode_rewards = []
@@ -56,12 +48,8 @@ if __name__ == "__main__":
 		while not done:
 			action = agent.get_action(state)
 			next_state, reward, done, _ = env.step(action)
-			agent.replay_buffer.store_transition(state, action, reward, next_state, done)
+			agent.learn(state, action, reward, next_state, done, args.batch_size)
 			episode_reward += reward
-
-			if len(agent.replay_buffer) > args.batch_size:
-				agent.update(args.batch_size)
-
 			state = next_state
 
 		episode_rewards.append(episode_reward)
