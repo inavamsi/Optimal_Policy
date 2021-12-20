@@ -127,10 +127,11 @@ class Grid():
 		return nbr_agents
 
 class game_env():
-	def __init__(self,grid_size, individual_types, initial_types_pop, color_list, vaccination_size):
+	def __init__(self,grid_size, individual_types, initial_types_pop, transmission_prob, color_list, vaccination_size):
 		self.grid_size = grid_size
 		self.individual_types=individual_types
 		self.initial_types_pop = initial_types_pop
+		self.transmission_prob = transmission_prob
 		self.color_list=color_list
 		self.vaccination_size = vaccination_size
 		self.env_shape = (1, grid_size, grid_size)
@@ -141,36 +142,11 @@ class game_env():
 		return random.choice(self.sim_obj.policy.valid_actions)
 
 	def reset(self):
-		def p_standard(p):
-			def p_fn(day,global_state,a1,nbrs):  #probability of going from immune to susceptible.
-				return p
-			return p_fn
-
-		def p_infection(day,global_state,my_agent,neighbour_agents):  # probability of infectiong neighbour
-			p_inf=0.3
-			p_not_inf=1
-			for nbr_agent in neighbour_agents:
-				if nbr_agent.individual_type in ['Infected','Asymptomatic'] and not nbr_agent.policy_state['quarantined']:
-					p_not_inf*=(1-p_inf)
-
-			return 1 - p_not_inf
 
 		grid = Grid(self.grid_size, self.individual_types, self.initial_types_pop)
-		policy=Vaccinate_block(grid, self.individual_types,self.vaccination_size,0)
+		policy=Vaccinate_block(grid, self.individual_types, self.vaccination_size, 0)
 
-		transmission_prob={}
-		for t in self.individual_types:
-			transmission_prob[t]={}
-
-		for t1 in self.individual_types:
-			for t2 in self.individual_types:
-				transmission_prob[t1][t2]=p_standard(0)
-
-		transmission_prob['Susceptible']['Infected']= p_infection
-		transmission_prob['Infected']['Immune']= p_standard(0.2)
-		transmission_prob['Immune']['Susceptible']= p_standard(0)
-
-		self.sim_obj=sim_obj= Simulate(transmission_prob,self.individual_types,grid,policy)
+		self.sim_obj=sim_obj= Simulate(self.transmission_prob,self.individual_types,grid,policy)
 		self.no_of_actions = policy.number_of_actions+1
 		self.state=copy.deepcopy(sim_obj.grid.grid)
 		return [grid.grid]
