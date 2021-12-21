@@ -68,3 +68,11 @@ optional arguments:
 
   -us UPDATE_STEPS, --update_steps UPDATE_STEPS
                         Target Network update steps for ConvDQN and other variants. Default = 200
+
+  -l, --load_checkpoint
+                        load model checkpoint. Default = False
+
+  -p PATH, --path PATH  
+                        folder path for model saving/loading. Default = models/
+
+  -pl, --plot           Disable plotting.

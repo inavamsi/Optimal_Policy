@@ -20,9 +20,9 @@ def parse_args():
 	arg_parser.add_argument("-emn", "--eps_min", dest="eps_min", type=float, default=0.01, help="Minimum Epsilon. Default = 0.01")
 	arg_parser.add_argument("-ed", "--eps_dec", dest="eps_dec", type=float, default=0.0001, help="Epsilon Decrement. Default = 0.0001")
 	arg_parser.add_argument("-us", "--update_steps", dest="update_steps", type=int, default=200, help="Target Network update steps for ConvDQN. Default = 200")
-	arg_parser.add_argument("-l", "--load_checkpoint", dest = "load_checkpoint", action='store_true', default = False, help='load model checkpoint')
-	arg_parser.add_argument("-p", "--path", type=str, dest = "path", default='models/', help='path for model saving/loading')
-	arg_parser.add_argument("-pl", "--plot", dest = "plot", action='store_false', default = True, help='Disable plot')
+	arg_parser.add_argument("-l", "--load_checkpoint", dest = "load_checkpoint", action='store_true', default = False, help='load model checkpoint. Default = False')
+	arg_parser.add_argument("-p", "--path", type=str, dest = "path", default='models/', help='folder path for model saving/loading. Default = models/')
+	arg_parser.add_argument("-pl", "--plot", dest = "plot", action='store_false', default = True, help='Disable plotting')
 	args = arg_parser.parse_args()
 	return args
 
