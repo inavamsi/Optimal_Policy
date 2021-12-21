@@ -16,7 +16,7 @@ The RL Agent uses variants of the Deep Q Learning Networks (DQN).
 4. Dueling DQN
 5. Dueling Double DQN
 
-### Requirements
+### Requirements :
 * Python3.8+
 * Numpy
 * PyTorch
