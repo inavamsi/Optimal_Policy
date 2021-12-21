@@ -69,7 +69,8 @@ def plot_grid(grid,gridlines,color_list):
 		ax.set_xticks(np.arange(-.5, n, 1));
 		ax.set_yticks(np.arange(-.5, n, 1));
 
-	plt.show()
+	plt.pause(0.3)
+	plt.close()
 
 def animate(grid, gridlines,color_list, time):
 	for g in grid.store:
@@ -91,9 +92,6 @@ def animate(grid, gridlines,color_list, time):
 			ax.set_xticks(np.arange(-.5, n, 1))
 			ax.set_yticks(np.arange(-.5, n, 1))
 		plt.pause(time)
-
-	time_delay(3)
-	for g in grid.store:
 		plt.close()
 
 def plot_learning_curve(scores, eps_history):
@@ -121,8 +119,3 @@ def plot_learning_curve(scores, eps_history):
 	ax2.yaxis.set_label_position('right')
 	ax2.tick_params(axis='y', colors="C1")
 	plt.show()
-
-
-# Misc
-def time_delay(sec):
-	time.sleep(sec)

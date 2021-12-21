@@ -25,10 +25,11 @@ class Cell():
 
 
 class Grid():
-	def __init__(self, grid, individual_types):
-		self.grid_size=len(grid)
+
+	def __init__(self, grid_size, individual_types, initial_types_pop):
+		self.grid_size=grid_size
 		self.initialise(individual_types)
-		self.grid=grid
+		self.randomly_intialize_grid(initial_types_pop)
 		self.update_timeseries()
 		self.init_agent_grid()
 
@@ -71,16 +72,21 @@ class Grid():
 
 	def randomly_intialize_grid(self,types_pop):
 		self.grid=np.zeros((self.grid_size,self.grid_size))
-		numbers=[]
-		for i in range(len(types_pop)):
-			for j in range(types_pop[i]):
-				numbers.append(i)
 
-		random.shuffle(numbers)
+		prob_list=[]
+		cum_prob=0
+		for state in types_pop.keys():
+			cum_prob+=types_pop[state]
+			prob_list.append(cum_prob)
 
 		for i in range(self.grid_size):
 			for j in range(self.grid_size):
-				self.grid[i][j]=numbers.pop(0)
+				r=random.random()
+				for indx,value in enumerate(prob_list):
+					if r<value:
+						state=list(types_pop.keys())[indx]
+						self.grid[i][j] = self.type_to_number[state]
+						break
 
 	def update_timeseries(self):
 		types_pop=np.zeros(self.no_types)
@@ -121,52 +127,26 @@ class Grid():
 		return nbr_agents
 
 class game_env():
-	def __init__(self,grid_size, individual_types, color_list, vaccination_size):
+	def __init__(self,grid_size, individual_types, initial_types_pop, transmission_prob, color_list, vaccination_size):
+		self.grid_size = grid_size
 		self.individual_types=individual_types
+		self.initial_types_pop = initial_types_pop
+		self.transmission_prob = transmission_prob
 		self.color_list=color_list
 		self.vaccination_size = vaccination_size
 		self.env_shape = (1, grid_size, grid_size)
-		self.reset(grid_size)
+		self.reset()
 
 	def sample_action(self):
 		#return random.randint(0,self.sim_obj.policy.no_of_actions-1)
 		return random.choice(self.sim_obj.policy.valid_actions)
 
-	def reset(self, grid_size):
-		def p_standard(p):
-			def p_fn(day,global_state,a1,nbrs):  #probability of going from immune to susceptible.
-				return p
-			return p_fn
+	def reset(self):
 
-		def p_infection(day,global_state,my_agent,neighbour_agents):  # probability of infectiong neighbour
-			p_inf=0.3
-			p_not_inf=1
-			for nbr_agent in neighbour_agents:
-				if nbr_agent.individual_type in ['Infected','Asymptomatic'] and not nbr_agent.policy_state['quarantined']:
-					p_not_inf*=(1-p_inf)
+		grid = Grid(self.grid_size, self.individual_types, self.initial_types_pop)
+		policy=Vaccinate_block(grid, self.individual_types, self.vaccination_size, 0)
 
-			return 1 - p_not_inf
-
-		gridtable =np.zeros((grid_size,grid_size))
-		gridtable[grid_size//3][grid_size//2]=1
-		gridtable[grid_size-1][grid_size-2]=1
-		gridtable[2][2]=1
-		grid=Grid(gridtable,self.individual_types)
-		policy=Vaccinate_block(grid, self.individual_types,self.vaccination_size,0)
-
-		transmission_prob={}
-		for t in self.individual_types:
-			transmission_prob[t]={}
-
-		for t1 in self.individual_types:
-			for t2 in self.individual_types:
-				transmission_prob[t1][t2]=p_standard(0)
-
-		transmission_prob['Susceptible']['Infected']= p_infection
-		transmission_prob['Infected']['Immune']= p_standard(0.2)
-		transmission_prob['Immune']['Susceptible']= p_standard(0)
-
-		self.sim_obj=sim_obj= Simulate(transmission_prob,self.individual_types,grid,policy)
+		self.sim_obj=sim_obj= Simulate(self.transmission_prob,self.individual_types,grid,policy)
 		self.no_of_actions = policy.number_of_actions+1
 		self.state=copy.deepcopy(sim_obj.grid.grid)
 		return [grid.grid]

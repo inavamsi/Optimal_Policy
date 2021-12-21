@@ -38,11 +38,11 @@ class ConvDQN(nn.Module):
 		self.output_dim = output_dim
 
 		self.conv = nn.Sequential(
-			nn.Conv2d(1, 32, kernel_size=4, stride=2),
+			nn.Conv2d(1, 32, kernel_size=3, stride=1),
 			nn.ReLU(),
-			#nn.Conv2d(32, 64, kernel_size=4, stride=2),
-			#nn.ReLU(),
-			nn.Conv2d(32, 16, kernel_size=3, stride=1),
+			nn.Conv2d(32, 64, kernel_size=4, stride=2),
+			nn.ReLU(),
+			nn.Conv2d(64, 16, kernel_size=3, stride=1),
 			nn.ReLU()
 		)
 
@@ -80,11 +80,11 @@ class DuelingDQN(nn.Module):
 		self.output_dim = output_dim
 
 		self.conv = nn.Sequential(
-			nn.Conv2d(1, 32, kernel_size=4, stride=2),
+			nn.Conv2d(1, 32, kernel_size=3, stride=1),
 			nn.ReLU(),
-			#nn.Conv2d(32, 64, kernel_size=4, stride=2),
-			#nn.ReLU(),
-			nn.Conv2d(32, 16, kernel_size=3, stride=1),
+			nn.Conv2d(32, 64, kernel_size=4, stride=2),
+			nn.ReLU(),
+			nn.Conv2d(64, 16, kernel_size=3, stride=1),
 			nn.ReLU()
 		)
 

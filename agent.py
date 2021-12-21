@@ -1,12 +1,12 @@
 import numpy as np
 import torch as T
 import torch.nn as nn
-import torch.autograd as autograd
 from utils import ReplayBuffer
 from network import ConvDQN, LinearDQN, DuelingDQN
+import os
 
 class Agent():
-	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec):
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, chkpt_dir, name):
 		self.env = env
 		self.learning_rate = learning_rate
 		self.gamma = gamma
@@ -14,6 +14,10 @@ class Agent():
 		self.eps_min=eps_min
 		self.eps_dec=eps_dec
 		self.network = network
+		self.checkpoint_dir = chkpt_dir
+		if not os.path.isdir(self.checkpoint_dir):
+			os.makedirs(self.checkpoint_dir)
+		self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
 
 	def dec_eps(self):
 		self.eps = max(self.eps_min, self.eps-self.eps_dec)
@@ -25,8 +29,8 @@ class Simple_DQNAgent(Agent):
 	"""
 	This agent can handle the networks ConvDQN and LinearDQN. This agent uses a single DQN and a replay buffer for learning.
 	"""
-	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size):
-		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec)
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, chkpt_dir, name):
+		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, chkpt_dir, name)
 
 		if self.network == "SimpleConvDQN":
 			self.model = ConvDQN(env.env_shape, env.no_of_actions)
@@ -75,14 +79,22 @@ class Simple_DQNAgent(Agent):
 		if len(self.replay_buffer) > batch_size:
 			self.update(batch_size)
 
+	def save_models(self):
+		print('... saving checkpoint ...')
+		T.save(self.model.state_dict(), self.checkpoint_file)
+
+	def load_models(self):
+		print('... loading checkpoint ...')
+		self.model.load_state_dict(T.load(self.checkpoint_file))
+
 
 class DQNAgent(Agent):
 	"""
 	Uses a replay buffer and has two DQNs, one that is used to get best actions and updated every step and the other, a target network,
 	used to compute the target Q value every step. This target network is only updated with the first DQN only after a fixed number of steps.
 	"""
-	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt):
-		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec)
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt, chkpt_dir, name):
+		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, chkpt_dir, name)
 
 		self.replay_buffer = ReplayBuffer(max_size=buffer_size, input_shape = env.env_shape)
 
@@ -141,10 +153,20 @@ class DQNAgent(Agent):
 		if len(self.replay_buffer) > batch_size:
 			self.update(batch_size)
 
+	def save_models(self):
+		print('... saving checkpoint ...')
+		T.save(self.q_eval.state_dict(), self.checkpoint_file+'_qeval')
+		T.save(self.q_target.state_dict(), self.checkpoint_file+'_qtarget')
+
+	def load_models(self):
+		print('... loading checkpoint ...')
+		self.q_eval.load_state_dict(T.load(self.checkpoint_file+'_qeval'))
+		self.q_target.load_state_dict(T.load(self.checkpoint_file+'_qtarget'))
+
 
 class DoubleDQNAgent(DQNAgent):
-	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt):
-		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt)
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt, chkpt_dir, name):
+		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt, chkpt_dir, name)
 
 
 	def update(self, batch_size):
@@ -170,14 +192,10 @@ class DoubleDQNAgent(DQNAgent):
 		self.dec_eps()
 
 
-class DuelingDQNAgent(Agent):
-	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt):
-		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec)
+class DuelingDQNAgent(DQNAgent):
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt, chkpt_dir, name):
+		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt, chkpt_dir, name)
 
-		self.replay_buffer = ReplayBuffer(max_size=buffer_size, input_shape = env.env_shape)
-
-		self.learn_step_counter = 0
-		self.replace_cnt = replace_cnt
 		self.q_eval = DuelingDQN(env.env_shape, env.no_of_actions)
 		self.q_target = DuelingDQN(env.env_shape, env.no_of_actions)
 
@@ -191,19 +209,6 @@ class DuelingDQNAgent(Agent):
 			state = T.tensor(state, dtype=T.float).unsqueeze(0).to(self.q_eval.device)
 			_, advantage = self.q_eval.forward(state)
 			return T.argmax(advantage).item()
-
-	def replace_target_network(self):
-		if self.learn_step_counter % self.replace_cnt == 0:
-			self.q_target.load_state_dict(self.q_eval.state_dict())
-
-	def get_batch_tensors(self, batch_size):
-		batch = self.replay_buffer.sample(batch_size)
-		states, actions, rewards, next_states, dones = batch
-		states_t = T.tensor(states, dtype=T.float).to(self.q_eval.device)
-		actions_t = T.tensor(actions).to(self.q_eval.device)
-		rewards_t = T.tensor(rewards, dtype=T.float).to(self.q_eval.device)
-		next_states_t = T.tensor(next_states, dtype=T.float).to(self.q_eval.device)
-		return states_t, actions_t, rewards_t, next_states_t
 
 	def update(self, batch_size):
 
@@ -229,16 +234,10 @@ class DuelingDQNAgent(Agent):
 
 		self.dec_eps()
 
-	def learn(self,state, action, reward, next_state, done, batch_size):
-		self.replay_buffer.store_transition(state, action, reward, next_state, done)
-
-		if len(self.replay_buffer) > batch_size:
-			self.update(batch_size)
-
 
 class DuelingDoubleDQNAgent(DuelingDQNAgent):
-	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt):
-		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt)
+	def __init__(self, env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt, chkpt_dir, name):
+		super().__init__(env, network, learning_rate, gamma, eps_max, eps_min, eps_dec, buffer_size, replace_cnt, chkpt_dir, name)
 
 
 	def update(self, batch_size):
@@ -267,21 +266,21 @@ class DuelingDoubleDQNAgent(DuelingDQNAgent):
 
 		self.dec_eps()
 
-def get_agent(env, args):
+def get_agent(env, args, name):
 	if args.network in ["LinearDQN", "SimpleConvDQN"]:
-		return Simple_DQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size)
+		return Simple_DQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.path, name)
 
 	elif args.network == "ConvDQN":
-		return DQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps)
+		return DQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps, args.path, name)
 
 	elif args.network == "DoubleDQN":
-		return DoubleDQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps)
+		return DoubleDQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps, args.path, name)
 
 	elif args.network == "DuelingDQN":
-		return DuelingDQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps)
+		return DuelingDQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps, args.path, name)
 
 	elif args.network == "DuelingDoubleDQN":
-		return DuelingDoubleDQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps)
+		return DuelingDoubleDQNAgent(env, args.network, args.learning_rate, args.gamma, args.eps_max, args.eps_min, args.eps_dec, args.max_buffer_size, args.update_steps, args.path, name)
 
 	else:
 		raise Exception("Enter Valid Network! Choose from : LinearDQN, SimpleConvDQN, ConvDQN, DoubleDQN, DuelingDQN, DuelingDoubleDQN")
